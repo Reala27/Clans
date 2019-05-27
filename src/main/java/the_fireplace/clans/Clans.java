@@ -194,31 +194,35 @@ public final class Clans {
                     //If a chunk owner exists
                     if (chunkOwner != null)
                     {
-                        System.out.println("Check 2");
+                        // System.out.println("Check 2");
                         NewClan chunkClan = ClanCache.getClanById(chunkOwner);
                         //If the owner has a clan
                         if (chunkClan != null)
                         {
-                            System.out.println("Chunk owned by " + chunkClan.getClanName());
+                            // System.out.println("Chunk owned by " + chunkClan.getClanName());
                             //bool to determine if a raid against the owner's clan is in effect
                             boolean isRaided = RaidingParties.hasActiveRaid(chunkClan);
                             
-                            System.out.println(chunkClan.getClanName() + " is under attack: " + isRaided);
+                            // System.out.println(chunkClan.getClanName() + " is under attack: " + isRaided);
                             if (isRaided)
                             {
-                                System.out.println("DESTRUCTION!!!!");
                                 IBlockState targetState = world.getBlockState(position);
 
-
-                                NewRaidRestoreDatabase.addRestoreBlock(c.getWorld().provider.getDimension(),
-                                                                       c, position, BlockSerializeUtil.blockToString(targetState),
-                                                                       chunkOwner);
+                                if (targetState.getBlock().hasTileEntity(targetState)) {
+                                    // We don't want to destroy a tile entity
+                                    return false;
+                                } else {
+                                    // System.out.println("DESTRUCTION!!!!");
+                                    NewRaidRestoreDatabase.addRestoreBlock(c.getWorld().provider.getDimension(),
+                                                                           c, position, BlockSerializeUtil.blockToString(targetState),
+                                                                           chunkOwner);
+                                }
                                 return true;
                             }
                             else
                             {
                                 //Cancel the event, disallowing the destruction.
-                                System.out.println(chunkClan.getClanName() + " is not the target of a raid.");
+                                // System.err.println(chunkClan.getClanName() + " is not the target of a raid.");
                                 return false;
                             }
                         }
@@ -228,8 +232,15 @@ public final class Clans {
                     {
                         //Remove the uuid as the chunk owner since the uuid is not associated with a clan.
                         ChunkUtils.clearChunkOwner(c);
-                        System.out.println("No clan owns this chunk. For testing purposes, destruction is disallowed.");
-                        return false;
+
+                        if(Clans.cfg.protectWilderness &&
+                           (Clans.cfg.minWildernessY < 0 ?
+                                position.getY() >= world.getSeaLevel() :
+                                position.getY() >= Clans.cfg.minWildernessY))
+                        {
+                            // System.err.println("No clan owns this chunk. Destruction is disallowed.");
+                            return false;
+                        }
                     }
                 }
 
