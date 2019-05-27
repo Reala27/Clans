@@ -29,6 +29,11 @@ public class Clan implements Serializable {
 	private long shield = Clans.cfg.initialShield * 60;
 	private long rentTimeStamp = System.currentTimeMillis(), upkeepTimeStamp = System.currentTimeMillis();
 
+  public String getName()
+  {
+    return clanName;
+  }
+
 	public Clan(String clanName, UUID leader){
 		this(clanName, leader, null);
 	}

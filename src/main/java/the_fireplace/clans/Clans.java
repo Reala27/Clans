@@ -40,6 +40,22 @@ import the_fireplace.clans.util.PlayerClanCapability;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import the_fireplace.clans.util.BlockSerializeUtil;
+import the_fireplace.clans.util.ChunkUtils;
+import the_fireplace.clans.clan.ClanCache;
+import the_fireplace.clans.clan.NewClan;
+import the_fireplace.clans.raid.NewRaidBlockPlacementDatabase;
+import the_fireplace.clans.raid.NewRaidRestoreDatabase;
+import the_fireplace.clans.raid.RaidingParties;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
+import java.util.function.Predicate;
+import java.util.UUID;
+
 import static the_fireplace.clans.Clans.MODID;
 
 @SuppressWarnings({"WeakerAccess", "Duplicates"})
@@ -93,7 +109,167 @@ public final class Clans {
             paymentHandler = new PaymentHandlerGE();
         else
             paymentHandler = new PaymentHandlerDummy();
+        if (Loader.isModLoaded("icbmclassic"))
+        {
+            System.out.println("Loaded with ICBM");
+
+            Class<?> blast_handler = null;
+            Class<?> block_break_event = null;
+
+            try
+            {
+                blast_handler = Class.forName("icbm.classic.content.explosive.handlers.BlastHandler");
+                System.out.println("Successfully found " + blast_handler.getTypeName());
+
+                block_break_event = Class.forName("icbm.classic.api.events.BlockBreakEvent");
+                System.out.println("Successfully found " + block_break_event.getTypeName());
+            } catch (ClassNotFoundException exc)
+            {
+                System.err.println("Despite what Forge says, we could not load ICBM: " + exc);
+                exc.printStackTrace();
+                return;
+            }
+
+            Method gwm_temp;
+            Method gpm_temp;
+            Method scbm_temp;
+
+            try
+            {
+                gwm_temp = block_break_event.getMethod("getWorld");
+                System.out.println("Successfully found " + gwm_temp.getName());
+
+                gpm_temp = block_break_event.getMethod("getPosition");
+                System.out.println("Successfully found " + gpm_temp.getName());
+
+                scbm_temp = blast_handler.getMethod("setCallback", Predicate.class);
+                System.out.println("Successfully found " + scbm_temp.getName());
+            } catch (NoSuchMethodException exc)
+            {
+                System.err.println("Failed to find method " + exc);
+                exc.printStackTrace();
+                return;
+            }
+
+            final Method get_world_method = gwm_temp;
+            final Method get_position_method = gpm_temp;
+            final Method set_callback_method = scbm_temp;
+
+            // Return true if ICBM should continue and break blocks,
+            //  false if ICBM should stop now.
+            Predicate<Object> icbm_callback = (Object event_obj) ->
+            {
+                BlockPos position = null;
+                World world = null;
+
+                try
+                {
+                    position = (BlockPos) get_position_method.invoke(event_obj);
+                    world = (World) get_world_method.invoke(event_obj);
+                } catch (IllegalAccessException exc)
+                {
+                    System.err.println("Method raised Illegal Access: " + exc);
+                    exc.printStackTrace();
+                    return true; // Allow ICBM to continue regardless, as this
+                    //  should never happen
+                } catch (IllegalArgumentException exc)
+                {
+                    System.err.println("Method raised Illegal Argument: " + exc);
+                    exc.printStackTrace();
+                    return true; // Allow ICBM to continue regardless, as this
+                    //  should never happen
+                } catch (InvocationTargetException exc)
+                {
+                    System.err.println("Called method raised exception: " + exc);
+                    exc.printStackTrace();
+                    return true; // Allow ICBM to continue regardless, as this
+                    //  should never happen
+                }
+
+                // Your handling code here
+                if (!world.isRemote)
+                {
+                    Chunk c = world.getChunk(position);
+                    UUID chunkOwner = ChunkUtils.getChunkOwner(c);
+                    //If a chunk owner exists
+                    if (chunkOwner != null)
+                    {
+                        System.out.println("Check 2");
+                        NewClan chunkClan = ClanCache.getClanById(chunkOwner);
+                        //If the owner has a clan
+                        if (chunkClan != null)
+                        {
+                            System.out.println("Chunk owned by " + chunkClan.getClanName());
+                            //bool to determine if a raid against the owner's clan is in effect
+                            boolean isRaided = RaidingParties.hasActiveRaid(chunkClan);
+                            
+                            System.out.println(chunkClan.getClanName() + " is under attack: " + isRaided);
+                            if (isRaided)
+                            {
+                                System.out.println("DESTRUCTION!!!!");
+                                IBlockState targetState = world.getBlockState(position);
+
+
+                                NewRaidRestoreDatabase.addRestoreBlock(c.getWorld().provider.getDimension(),
+                                                                       c, position, BlockSerializeUtil.blockToString(targetState),
+                                                                       chunkOwner);
+                                return true;
+                            }
+                            else
+                            {
+                                //Cancel the event, disallowing the destruction.
+                                System.out.println(chunkClan.getClanName() + " is not the target of a raid.");
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                    else
+                    {
+                        //Remove the uuid as the chunk owner since the uuid is not associated with a clan.
+                        ChunkUtils.clearChunkOwner(c);
+                        System.out.println("No clan owns this chunk. For testing purposes, destruction is disallowed.");
+                        return false;
+                    }
+                }
+
+
+                return true;
+            };
+
+            try
+            {
+                set_callback_method.invoke(null, (Object) (icbm_callback));
+                System.out.println("Successfully registered ICBM callback.");
+            } catch (IllegalAccessException exc)
+            {
+                System.err.println("Method raised Illegal Access: " + exc);
+                exc.printStackTrace();
+                return; // Allow ICBM to continue regardless, as this
+                //  should never happen
+            } catch (IllegalArgumentException exc)
+            {
+                System.err.println("Method raised Illegal Argument: " + exc);
+                exc.printStackTrace();
+                return; // Allow ICBM to continue regardless, as this
+                //  should never happen
+            } catch (InvocationTargetException exc)
+            {
+                System.err.println("Called method raised exception: " + exc);
+                exc.printStackTrace();
+                return; // Allow ICBM to continue regardless, as this
+                //  should never happen
+            }
+
+            System.out.println("ICBM Support fully setup.");
+        }
+        else
+        {
+            System.out.println("Loaded without ICBM");
+        }
+
     }
+    
 
     @Mod.EventHandler
     public void onServerStart(FMLServerStartingEvent event) {
