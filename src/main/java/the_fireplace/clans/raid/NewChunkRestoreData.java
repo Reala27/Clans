@@ -61,7 +61,14 @@ public class NewChunkRestoreData {
 
 	public JsonObject toJsonObject() {
 		JsonObject ret = new JsonObject();
-		ret.addProperty("clan", clan.toString());
+
+		if(clan == null) {
+			// System.err.println("Cannot convert to JSON object because the clan is null.");
+			ret.addProperty("clan", "");
+		} else {
+			ret.addProperty("clan", clan.toString());
+		}
+
 		JsonArray replaceBlocksMap = new JsonArray();
 		for(Map.Entry<SerialBlockPos, String> entry: replaceBlocks.entrySet()) {
 			JsonObject outputEntry = new JsonObject();
