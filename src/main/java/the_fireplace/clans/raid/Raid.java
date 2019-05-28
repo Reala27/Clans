@@ -150,9 +150,15 @@ public class Raid {
 	}
 
 	public void incrementDefenderAbandonmentTime(EntityPlayerMP defender) {
-		if(defender == null)
+		if(defender == null || defenders == null || members == null)
 			return;
-		defenders.put(defender.getUniqueID(), members.get(defender.getUniqueID()) + 1);
+
+		Integer member_value = members.get(defender.getUniqueID());
+
+		if(member_value == null)
+			return;
+
+		defenders.put(defender.getUniqueID(), member_value + 1);
 		if(defenders.get(defender.getUniqueID()) > Clans.cfg.maxClanDesertionTime * 2)//Times two because this is called every half second
 			removeDefender(defender);
 		else if(defenders.get(defender.getUniqueID()) == 1)
