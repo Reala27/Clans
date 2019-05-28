@@ -133,6 +133,7 @@ public final class Clans {
             Method gwm_temp;
             Method gpm_temp;
             Method scbm_temp;
+            Method gpbdm_temp;
 
             try
             {
@@ -142,9 +143,13 @@ public final class Clans {
                 gpm_temp = block_break_event.getMethod("getPosition");
                 System.out.println("Successfully found " + gpm_temp.getName());
 
+                gpbdm_temp = block_break_event.getMethod("getPlacedBackDown");
+                System.out.println("Successfully found "  + gpbdm_temp.getName());
+
                 scbm_temp = blast_handler.getMethod("setCallback", Predicate.class);
                 System.out.println("Successfully found " + scbm_temp.getName());
-            } catch (NoSuchMethodException exc)
+            }
+            catch (NoSuchMethodException exc)
             {
                 System.err.println("Failed to find method " + exc);
                 exc.printStackTrace();
@@ -154,6 +159,7 @@ public final class Clans {
             final Method get_world_method = gwm_temp;
             final Method get_position_method = gpm_temp;
             final Method set_callback_method = scbm_temp;
+            final Method get_placed_back_down_method = gpbdm_temp;
 
             // Return true if ICBM should continue and break blocks,
             //  false if ICBM should stop now.
@@ -161,32 +167,36 @@ public final class Clans {
             {
                 BlockPos position = null;
                 World world = null;
+                boolean placedBackDown = false;
 
                 try
                 {
                     position = (BlockPos) get_position_method.invoke(event_obj);
                     world = (World) get_world_method.invoke(event_obj);
-                } catch (IllegalAccessException exc)
+                    placedBackDown = (boolean) get_placed_back_down_method.invoke(event_obj);
+                }
+                catch (IllegalAccessException exc)
                 {
                     System.err.println("Method raised Illegal Access: " + exc);
                     exc.printStackTrace();
                     return true; // Allow ICBM to continue regardless, as this
-                    //  should never happen
-                } catch (IllegalArgumentException exc)
+                                 //  should never happen
+                }
+                catch (IllegalArgumentException exc)
                 {
                     System.err.println("Method raised Illegal Argument: " + exc);
                     exc.printStackTrace();
                     return true; // Allow ICBM to continue regardless, as this
-                    //  should never happen
-                } catch (InvocationTargetException exc)
+                                 //  should never happen
+                }
+                catch (InvocationTargetException exc)
                 {
                     System.err.println("Called method raised exception: " + exc);
                     exc.printStackTrace();
                     return true; // Allow ICBM to continue regardless, as this
-                    //  should never happen
+                                 //  should never happen
                 }
 
-                // Your handling code here
                 if (!world.isRemote)
                 {
                     Chunk c = world.getChunk(position);
@@ -202,16 +212,19 @@ public final class Clans {
                             // System.out.println("Chunk owned by " + chunkClan.getClanName());
                             //bool to determine if a raid against the owner's clan is in effect
                             boolean isRaided = RaidingParties.hasActiveRaid(chunkClan);
-                            
+
                             // System.out.println(chunkClan.getClanName() + " is under attack: " + isRaided);
                             if (isRaided)
                             {
                                 IBlockState targetState = world.getBlockState(position);
 
-                                if (targetState.getBlock().hasTileEntity(targetState)) {
+                                if (targetState.getBlock().hasTileEntity(targetState))
+                                {
                                     // We don't want to destroy a tile entity
                                     return false;
-                                } else {
+                                }
+                                else
+                                {
                                     // System.out.println("DESTRUCTION!!!!");
                                     NewRaidRestoreDatabase.addRestoreBlock(c.getWorld().provider.getDimension(),
                                                                            c, position, BlockSerializeUtil.blockToString(targetState),
@@ -227,6 +240,14 @@ public final class Clans {
                             }
                         }
                         return true;
+                    }
+                    else if(placedBackDown)
+                    {
+                        // When the block is placed back down, we want to
+                        //   make sure that it will get removed once the raid
+                        //   ends to prevent duplication of blocks
+                        NewRaidRestoreDatabase.addRemoveBlock(c.getWorld().provider.getDimension(),
+                                                              c, position);
                     }
                     else
                     {
