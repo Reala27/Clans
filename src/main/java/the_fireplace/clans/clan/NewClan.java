@@ -29,6 +29,7 @@ public class NewClan {
     private long rent = 0;
     private int wins = 0;
     private int losses = 0;
+    /** Shield, in minutes. */
     private long shield = Clans.cfg.initialShield * 60;
     private long rentTimestamp = System.currentTimeMillis() + Clans.cfg.chargeRentDays * 1000L * 60L * 60L * 24L, upkeepTimestamp = System.currentTimeMillis() + Clans.cfg.clanUpkeepDays * 1000L * 60L * 60L * 24L;
     private int color = new Random().nextInt(0xffffff);
@@ -382,6 +383,9 @@ public class NewClan {
         return shield > 0;
     }
 
+    /**
+     * Gets the amount of shield remaining on the clan, in minutes.
+     */
     public long getShield() {
         return shield;
     }

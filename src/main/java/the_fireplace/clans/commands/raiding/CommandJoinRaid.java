@@ -55,7 +55,7 @@ public class CommandJoinRaid extends RaidSubCommand {
 							} else
 								sender.sendMessage(new TextComponentTranslation("%s does not have enough online members to get raided!", target.getClanName()).setStyle(TextStyles.RED));
 						} else
-							sender.sendMessage(new TextComponentTranslation("%s is currently shielded! Try again in %s hours.", target.getClanName(), Math.round(100f*target.getShield()*60)/100f).setStyle(TextStyles.RED));
+							sender.sendMessage(new TextComponentTranslation("%s is currently shielded! Try again in %s hours.", target.getClanName(), Math.round(100f*target.getShield()/60)/100f).setStyle(TextStyles.RED));
 					} else { //Join an existing raid
 						Raid raid = RaidingParties.getRaid(target);
 						if(target.getOnlineMembers().size() + Clans.cfg.maxRaidersOffset > raid.getMemberCount()) {
