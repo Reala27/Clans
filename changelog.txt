@@ -1,2 +1,3 @@
 Fixed clan members getting disconnected if they were removed from a raid
 Fixed console spam if trying to use tab completions for /clan kick
+Fixed the spacing of the raid completion message
