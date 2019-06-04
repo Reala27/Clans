@@ -172,7 +172,13 @@ public class LandProtectionEvents {
                             if(RaidingParties.hasActiveRaid(chunkClan) && Clans.cfg.allowRaiderBlockInteraction)
                                 return;
                             else
-                                if (!(event.getItemStack().getItem() instanceof ItemBlock))
+                                // If the block is a door and non-raiders may interact with those, then don't bother doing anything
+                                if (Clans.cfg.allowNonRaiderDoorInteraction &&
+                                    (targetState.getBlock() instanceof BlockDoor ||
+                                     targetState.getBlock() instanceof BlockTrapDoor ||
+                                     targetState.getBlock() instanceof BlockFenceGate))
+                                    return;
+                                else if (!(event.getItemStack().getItem() instanceof ItemBlock))
                                     cancelBlockInteraction(event, interactingPlayer, targetState);
                                 else if (targetState.getBlock() instanceof BlockContainer || targetState.getBlock() instanceof BlockDragonEgg)
                                     cancelBlockInteraction(event, interactingPlayer, targetState);

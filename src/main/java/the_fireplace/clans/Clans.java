@@ -562,6 +562,8 @@ public final class Clans {
         public static boolean forbidNonPlayersToDamageEntities = true;
         @Config.Comment("Allow players to interact with blocks during a raid.")
         public static boolean allowRaiderBlockInteraction = false;
+        @Config.Comment("Allow interaction with doors outside of a raid.")
+        public static boolean allowNonRaiderDoorInteraction = false;
     }
 }
 
