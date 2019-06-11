@@ -67,6 +67,10 @@ public class Raid {
 		return attackers.keySet();
 	}
 
+	public Set<UUID> getDefenders() {
+		return defenders.keySet();
+	}
+
 	public ArrayList<UUID> getInitAttackers() {
 		return initMembers;
 	}

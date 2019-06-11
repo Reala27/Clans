@@ -211,7 +211,7 @@ public class Timer {
 					for(NewClan pc: playerClans)
 						if (RaidingParties.hasActiveRaid(pc)) {
 							Raid r = RaidingParties.getActiveRaid(pc);
-							if(r.getAttackers().contains(player.getUniqueID()))
+							if(r.getDefenders().contains(player.getUniqueID()))
 								if (pc.getClanId().equals(chunkClan))
 									r.resetDefenderAbandonmentTime(player);
 								else
@@ -220,10 +220,11 @@ public class Timer {
 					if (RaidingParties.getRaidingPlayers().contains(player.getUniqueID())) {
 						Raid r = RaidingParties.getRaid(player);
 						if (r.isActive()) {
-							if (r.getTarget().getClanId().equals(chunkClan))
-								r.resetAttackerAbandonmentTime(player);
-							else
-								r.incrementAttackerAbandonmentTime(player);
+							if(r.getAttackers().contains(player.getUniqueID()))
+								if (r.getTarget().getClanId().equals(chunkClan))
+									r.resetAttackerAbandonmentTime(player);
+								else
+									r.incrementAttackerAbandonmentTime(player);
 						}
 					}
 

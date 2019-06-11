@@ -1,2 +1,2 @@
 Fixed a crash if clans are leaderless when disbanded
-
+Fixed clan members getting disconnected if they were removed from a raid
