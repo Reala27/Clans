@@ -1,2 +1,3 @@
 Fixed a crash if clans are leaderless when disbanded
 Fixed clan members getting disconnected if they were removed from a raid
+Fixed crash caused by writing to chunk cache while it is being read from
