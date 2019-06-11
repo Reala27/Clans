@@ -37,7 +37,7 @@ public class CommandLeaveRaid extends RaidSubCommand {
 		if(!RaidingParties.getRaidingPlayers().contains(sender.getUniqueID())) {
 			Raid raid = RaidingParties.getRaid(sender);
 			if (raid != null) {
-				raid.removeMember(sender);
+				raid.removeAttacker(sender);
 				sender.sendMessage(new TextComponentTranslation("You successfully left the raiding party against %s!", raid.getTarget().getClanName()).setStyle(TextStyles.GREEN));
 			} else//Internal error because we should not reach this point
 				sender.sendMessage(new TextComponentString("Internal error: You are not in a raiding party!").setStyle(TextStyles.RED));

@@ -10,7 +10,6 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import the_fireplace.clans.Clans;
 import the_fireplace.clans.clan.ClanCache;
-import the_fireplace.clans.clan.EnumRank;
 import the_fireplace.clans.clan.NewClan;
 import the_fireplace.clans.commands.RaidSubCommand;
 import the_fireplace.clans.raid.Raid;
@@ -58,11 +57,11 @@ public class CommandJoinRaid extends RaidSubCommand {
 							sender.sendMessage(new TextComponentTranslation("%s is currently shielded! Try again in %s hours.", target.getClanName(), Math.round(100f*target.getShield()/60)/100f).setStyle(TextStyles.RED));
 					} else { //Join an existing raid
 						Raid raid = RaidingParties.getRaid(target);
-						if(target.getOnlineMembers().size() + Clans.cfg.maxRaidersOffset > raid.getMemberCount()) {
-							raid.addMember(sender);
+						if(target.getOnlineMembers().size() + Clans.cfg.maxRaidersOffset > raid.getAttackerCount()) {
+							raid.addAttacker(sender);
 							sender.sendMessage(new TextComponentTranslation("You successfully joined the raiding party against %s!", target.getClanName()).setStyle(TextStyles.GREEN));
 						} else
-							sender.sendMessage(new TextComponentTranslation("The raiding party against %s cannot hold any more people! It has %s raiders and the limit is currently %s.", target.getClanName(), raid.getMemberCount(), target.getOnlineMembers().size() + Clans.cfg.maxRaidersOffset).setStyle(TextStyles.RED));
+							sender.sendMessage(new TextComponentTranslation("The raiding party against %s cannot hold any more people! It has %s raiders and the limit is currently %s.", target.getClanName(), raid.getAttackerCount(), target.getOnlineMembers().size() + Clans.cfg.maxRaidersOffset).setStyle(TextStyles.RED));
 					}
 				} else
 					sender.sendMessage(new TextComponentString("You cannot raid a clan you are in!").setStyle(TextStyles.RED));

@@ -101,18 +101,20 @@ public class Timer {
 								upkeep *= clan.getClaimCount();
 							if (Clans.getPaymentHandler().deductPartialAmount(upkeep, clan.getClanId()) > 0 && Clans.cfg.disbandNoUpkeep) {
 								long distFunds = Clans.getPaymentHandler().getBalance(clan.getClanId());
+								long rem;
 								distFunds += Clans.cfg.claimChunkCost * clan.getClaimCount();
 								if (Clans.cfg.leaderRecieveDisbandFunds) {
-									clan.payLeaders(distFunds);
-									distFunds = 0;
+									distFunds = clan.payLeaders(distFunds);
+									rem = distFunds % clan.getMemberCount();
+									distFunds /= clan.getMemberCount();
 								} else {
-									clan.payLeaders(distFunds % clan.getMemberCount());
+									rem = clan.payLeaders(distFunds % clan.getMemberCount());
 									distFunds /= clan.getMemberCount();
 								}
 								for (UUID member : clan.getMembers().keySet()) {
 									Clans.getPaymentHandler().ensureAccountExists(member);
-									if (!Clans.getPaymentHandler().addAmount(distFunds, member))
-										clan.payLeaders(distFunds);
+									if (!Clans.getPaymentHandler().addAmount(distFunds + (rem-- > 0 ? 1 : 0), member))
+										rem += clan.payLeaders(distFunds);
 									EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(member);
 									//noinspection ConstantConditions
 									if (player != null) {
@@ -209,7 +211,7 @@ public class Timer {
 					for(NewClan pc: playerClans)
 						if (RaidingParties.hasActiveRaid(pc)) {
 							Raid r = RaidingParties.getActiveRaid(pc);
-							if(r.getMembers().contains(player.getUniqueID()))
+							if(r.getAttackers().contains(player.getUniqueID()))
 								if (pc.getClanId().equals(chunkClan))
 									r.resetDefenderAbandonmentTime(player);
 								else
