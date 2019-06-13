@@ -4,9 +4,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.Chunk;
-import the_fireplace.clans.util.BlockSerializeUtil;
 
 import java.io.Serializable;
 import java.util.ArrayList;

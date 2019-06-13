@@ -48,7 +48,7 @@ public class CommandJoinRaid extends RaidSubCommand {
 				if(!target.getMembers().containsKey(sender.getUniqueID())) {
 					if (!RaidingParties.getRaidedClans().contains(target)) {
 						if(!target.isShielded()) {
-							if (target.getOnlineMembers().size() > 0 && target.getOnlineMembers().size() + Clans.cfg.maxRaidersOffset > 0) {
+							if (!target.getOnlineMembers().isEmpty() && target.getOnlineMembers().size() + Clans.cfg.maxRaidersOffset > 0) {
 								new Raid(sender, target);
 								sender.sendMessage(new TextComponentTranslation("You successfully created the raiding party against %s!", target.getClanName()).setStyle(TextStyles.GREEN));
 							} else

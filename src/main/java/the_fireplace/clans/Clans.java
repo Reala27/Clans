@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
 
 import static the_fireplace.clans.Clans.MODID;
 
-@SuppressWarnings({"WeakerAccess", "Duplicates"})
+@SuppressWarnings({"WeakerAccess"})
 @Mod.EventBusSubscriber(modid = MODID)
 @Mod(modid = MODID, name = Clans.MODNAME, version = Clans.VERSION, acceptedMinecraftVersions = "[1.12,1.13)", acceptableRemoteVersions = "*", dependencies="after:grandeconomy;after:dynmap")
 public final class Clans {
@@ -143,7 +143,6 @@ public final class Clans {
                     return capability == CLAN_DATA_CAP;
                 }
 
-                @SuppressWarnings("Duplicates")
                 @Nullable
                 @Override
                 public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
@@ -184,6 +183,7 @@ public final class Clans {
         });
     }
 
+    @SuppressWarnings("CanBeFinal")
     @Config(modid = MODID)
     public static class cfg {
         //General clan config

@@ -47,7 +47,6 @@ public class CommandKick extends ClanSubCommand {
 		return "/clan kick <player>";
 	}
 
-	@SuppressWarnings("Duplicates")
 	@Override
 	public void run(MinecraftServer server, EntityPlayerMP sender, String[] args) throws CommandException {
 		GameProfile target = server.getPlayerProfileCache().getGameProfileForUsername(args[0]);

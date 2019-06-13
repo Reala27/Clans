@@ -117,7 +117,7 @@ public class CommandDetails extends ClanSubCommand {
 			}
 		} else if(!clan.isOpclan()) {
 			sender.sendMessage(new TextComponentTranslation("Error: %s has no members.", clan.getClanName()).setStyle(TextStyles.RED));
-			Clans.LOGGER.error("Clan %s has no members.", clan.getClanName());
+			Clans.LOGGER.error("Clan {} has no members.", clan.getClanName());
 		}
 	}
 }

@@ -17,7 +17,7 @@ public class ClanChunkCache {
 
     private static boolean isLoaded = false;
     private static boolean isChanged = false;
-    private static HashMap<UUID, Set<ChunkPosition>> claimedChunks = Maps.newHashMap();
+    private static final HashMap<UUID, Set<ChunkPosition>> claimedChunks = Maps.newHashMap();
 
     public static Set<ChunkPosition> getChunks(UUID clan) {
         if(!isLoaded)

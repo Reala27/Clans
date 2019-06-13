@@ -1,11 +1,9 @@
 package the_fireplace.clans.commands.teleportation;
 
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.BlockBed;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;

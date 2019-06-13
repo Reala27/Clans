@@ -1,9 +1,7 @@
 package the_fireplace.clans.commands.details;
 
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 import the_fireplace.clans.clan.EnumRank;
@@ -12,7 +10,6 @@ import the_fireplace.clans.clan.NewClanDatabase;
 import the_fireplace.clans.commands.ClanSubCommand;
 import the_fireplace.clans.util.TextStyles;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
