@@ -232,8 +232,14 @@ public class DynmapCompat implements IDynmapCompat {
             if (teamMembers.size() > 0) {
                 stToolTip.append("<br><div style=\"text-align: center;\"><span style=\"font-weight:bold;\"><i>Team Members</i></span></div>");
 
-                for (UUID member : teamMembers)
-                    stToolTip.append("<div style=\"text-align: center;\"><span>").append(stripColorCodes(Objects.requireNonNull(FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerProfileCache().getProfileByUUID(member)).getName())).append("</span></div>");
+                for (UUID member : teamMembers) {
+                       com.mojang.authlib.GameProfile profile = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerProfileCache().getProfileByUUID(member);
+                    if(profile == null) {
+                        System.err.println("NULL Profile found for player UUID `" + member + "`! Skipping.");
+                    } else {
+                        stToolTip.append("<div style=\"text-align: center;\"><span>").append(stripColorCodes(profile.getName())).append("</span></div>");
+                    }
+                }
             }
 
             stToolTip.append("</div>");
