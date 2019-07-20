@@ -30,7 +30,15 @@ public class ClanChunkCache {
         if(!isLoaded)
             load();
         Set<NewClan> claimClans = Sets.newHashSet();
-        for(UUID clanId: claimedChunks.keySet()) {
+
+        Set<UUID> clanIds = claimedChunks.keySet();
+
+        // do nothing if this is null
+        if(clanIds == null) {
+            return claimClans;
+        }
+
+        for(UUID clanId: clanIds) {
             NewClan clan = ClanCache.getClanById(clanId);
             if(clan != null)
                 claimClans.add(clan);
