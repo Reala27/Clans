@@ -21,6 +21,9 @@ import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+
+import net.minecraftforge.common.util.FakePlayer;
+
 import the_fireplace.clans.Clans;
 import the_fireplace.clans.clan.ClanCache;
 import the_fireplace.clans.clan.NewClan;
@@ -46,6 +49,11 @@ public class LandProtectionEvents {
                 NewClan chunkClan = ClanCache.getClanById(chunkOwner);
                 if (chunkClan != null) {
                     EntityPlayer breakingPlayer = event.getPlayer();
+
+                    if(breakingPlayer instanceof FakePlayer) {
+                        return;
+                    }
+
                     if (breakingPlayer instanceof EntityPlayerMP) {
                         ArrayList<NewClan> playerClans = ClanCache.getPlayerClans(breakingPlayer.getUniqueID());
                         boolean isRaided = RaidingParties.isRaidedBy(chunkClan, breakingPlayer);
@@ -107,6 +115,11 @@ public class LandProtectionEvents {
             Chunk c = event.getWorld().getChunk(event.getPos());
             UUID chunkOwner = ChunkUtils.getChunkOwner(c);
             EntityPlayer placingPlayer = event.getPlayer();
+
+            if(placingPlayer instanceof FakePlayer) {
+                return;
+            }
+
             if (placingPlayer instanceof EntityPlayerMP) {
                 if (chunkOwner != null) {
                     NewClan chunkClan = ClanCache.getClanById(chunkOwner);
@@ -165,6 +178,11 @@ public class LandProtectionEvents {
                 NewClan chunkClan = ClanCache.getClanById(chunkOwner);
                 if (chunkClan != null) {
                     EntityPlayer interactingPlayer = event.getEntityPlayer();
+
+                    if(interactingPlayer instanceof FakePlayer) {
+                        return;
+                    }
+
                     if (interactingPlayer instanceof EntityPlayerMP) {
                         ArrayList<NewClan> playerClan = ClanCache.getPlayerClans(interactingPlayer.getUniqueID());
                         IBlockState targetState = event.getWorld().getBlockState(event.getPos());
