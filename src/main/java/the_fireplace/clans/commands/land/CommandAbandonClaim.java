@@ -40,7 +40,6 @@ public class CommandAbandonClaim extends ClanSubCommand {
 		return "/clan abandonclaim";
 	}
 
-	@SuppressWarnings("Duplicates")
 	@Override
 	public void run(@Nullable MinecraftServer server, EntityPlayerMP sender, String[] args) {
 		Chunk c = sender.getEntityWorld().getChunk(sender.getPosition());

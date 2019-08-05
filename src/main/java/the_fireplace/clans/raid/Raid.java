@@ -19,17 +19,17 @@ import java.util.UUID;
 
 public class Raid {
 	private ArrayList<UUID> initMembers;
-	private HashMap<UUID, Integer> members, defenders;
+	private HashMap<UUID, Integer> attackers, defenders;
 	private NewClan target;
 	private int remainingSeconds = Clans.cfg.maxRaidDuration * 60;
 	private long cost;
 	private boolean isActive;
 
 	public Raid(EntityPlayerMP starter, NewClan targetClan){
-		members = Maps.newHashMap();
+		attackers = Maps.newHashMap();
 		initMembers = Lists.newArrayList();
 		defenders = Maps.newHashMap();
-		addMember(starter);
+		addAttacker(starter);
 		this.target = targetClan;
 		cost = 0;
 		RaidingParties.addRaid(target, this);
@@ -63,29 +63,33 @@ public class Raid {
 		target.addWin();
 	}
 
-	public Set<UUID> getMembers() {
-		return members.keySet();
+	public Set<UUID> getAttackers() {
+		return attackers.keySet();
 	}
 
-	public ArrayList<UUID> getInitMembers() {
+	public Set<UUID> getDefenders() {
+		return defenders.keySet();
+	}
+
+	public ArrayList<UUID> getInitAttackers() {
 		return initMembers;
 	}
 
-	public int getMemberCount(){
-		return members.size();
+	public int getAttackerCount(){
+		return attackers.size();
 	}
 
-	public void addMember(EntityPlayerMP player) {
-		this.members.put(player.getUniqueID(), 0);
+	public void addAttacker(EntityPlayerMP player) {
+		this.attackers.put(player.getUniqueID(), 0);
 		this.initMembers.add(player.getUniqueID());
 		RaidingParties.addRaider(player, this);
 	}
 
-	public boolean removeMember(EntityPlayerMP player) {
-		boolean rm = this.members.remove(player.getUniqueID()) != null;
+	public boolean removeAttacker(EntityPlayerMP player) {
+		boolean rm = this.attackers.remove(player.getUniqueID()) != null;
 		if(rm) {
 			RaidingParties.removeRaider(player.getUniqueID());
-			if(this.members.isEmpty()) {
+			if(this.attackers.isEmpty()) {
 				if(isActive)
 					defenderVictory();
 				else
@@ -109,9 +113,9 @@ public class Raid {
 				EntityPlayerMP d2 = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(member);
 				//noinspection ConstantConditions
 				if (d2 != null)
-					d2.sendMessage(new TextComponentTranslation("The raid against %s has %s minutes remaining! You will glow until the raid ends! There are %s raiders still alive.", target.getClanName(), Clans.cfg.remainingTimeToGlow, members.size()).setStyle(TextStyles.YELLOW));
+					d2.sendMessage(new TextComponentTranslation("The raid against %s has %s minutes remaining! You will glow until the raid ends! There are %s raiders still alive.", target.getClanName(), Clans.cfg.remainingTimeToGlow, attackers.size()).setStyle(TextStyles.YELLOW));
 			}
-			for(UUID member: getMembers()) {
+			for(UUID member: getAttackers()) {
 				EntityPlayerMP d2 = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(member);
 				//noinspection ConstantConditions
 				if(d2 != null)
@@ -129,20 +133,20 @@ public class Raid {
 	}
 
 	public int getAttackerAbandonmentTime(EntityPlayerMP member) {
-		return members.get(member.getUniqueID());
+		return attackers.get(member.getUniqueID());
 	}
 
 	public void incrementAttackerAbandonmentTime(EntityPlayerMP member) {
-		members.put(member.getUniqueID(), members.get(member.getUniqueID()) + 1);
-		if(members.get(member.getUniqueID()) > Clans.cfg.maxAttackerAbandonmentTime * 2) {//Times two because this is called every half second
-			removeMember(member);
+		attackers.put(member.getUniqueID(), attackers.get(member.getUniqueID()) + 1);
+		if(attackers.get(member.getUniqueID()) > Clans.cfg.maxAttackerAbandonmentTime * 2) {//Times two because this is called every half second
+			removeAttacker(member);
 			member.sendMessage(new TextComponentString("You have been removed from your raid because you spent too long outside the target's territory.").setStyle(TextStyles.YELLOW));
-		} else if(members.get(member.getUniqueID()) == 1)
+		} else if(attackers.get(member.getUniqueID()) == 1)
 			member.sendMessage(new TextComponentTranslation("You are not in the target clan's territory. If you stay outside it for longer than %s seconds, you will be removed from the raiding party.", Clans.cfg.maxAttackerAbandonmentTime).setStyle(TextStyles.YELLOW));
 	}
 
 	public void resetAttackerAbandonmentTime(EntityPlayerMP member) {
-		members.put(member.getUniqueID(), 0);
+		attackers.put(member.getUniqueID(), 0);
 	}
 
 	public int getDefenderAbandonmentTime(EntityPlayerMP member) {
@@ -150,15 +154,15 @@ public class Raid {
 	}
 
 	public void incrementDefenderAbandonmentTime(EntityPlayerMP defender) {
-		if(defender == null || defenders == null || members == null)
+		if(defender == null || defenders == null || attackers == null)
 			return;
 
-		Integer member_value = members.get(defender.getUniqueID());
+		Integer attacker_value = attackers.get(defender.getUniqueID());
 
-		if(member_value == null)
+		if(attacker_value == null)
 			return;
 
-		defenders.put(defender.getUniqueID(), member_value + 1);
+		defenders.put(defender.getUniqueID(), attacker_value + 1);
 		if(defenders.get(defender.getUniqueID()) > Clans.cfg.maxClanDesertionTime * 2)//Times two because this is called every half second
 			removeDefender(defender);
 		else if(defenders.get(defender.getUniqueID()) == 1)

@@ -42,7 +42,7 @@ public class CommandStartRaid extends RaidSubCommand {
 			if (raid != null) {
 				assert server != null;
 				HashMap<EntityPlayerMP, EnumRank> clanPlayers = raid.getTarget().getOnlineMembers();
-				if(clanPlayers.size() >= raid.getMemberCount() - Clans.cfg.maxRaidersOffset) {
+				if(clanPlayers.size() >= raid.getAttackerCount() - Clans.cfg.maxRaidersOffset) {
 					if(!RaidingParties.hasActiveRaid(raid.getTarget())) {
 						if(!RaidingParties.isPreparingRaid(raid.getTarget())) {
 							long raidCost = Clans.cfg.startRaidCost;
@@ -59,7 +59,7 @@ public class CommandStartRaid extends RaidSubCommand {
 					} else //This should not be possible
 						sender.sendMessage(new TextComponentTranslation("Internal error: Another raiding party is raiding this clan right now. Try again in %s hours.", Math.round(100f*(Clans.cfg.defenseShield*60f*60f+raid.getRemainingSeconds())/60f/60f)/100f).setStyle(TextStyles.RED));
 				} else
-					sender.sendMessage(new TextComponentTranslation("Your raiding party has too many people! It has %s raiders and the limit is currently %s.", raid.getMemberCount(), clanPlayers.size() + Clans.cfg.maxRaidersOffset).setStyle(TextStyles.RED));
+					sender.sendMessage(new TextComponentTranslation("Your raiding party has too many people! It has %s raiders and the limit is currently %s.", raid.getAttackerCount(), clanPlayers.size() + Clans.cfg.maxRaidersOffset).setStyle(TextStyles.RED));
 			} else//Internal error because we should not reach this point
 				sender.sendMessage(new TextComponentString("Internal error: You are not in a raiding party!").setStyle(TextStyles.RED));
 		} else

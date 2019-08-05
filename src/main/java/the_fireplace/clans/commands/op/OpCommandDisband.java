@@ -2,7 +2,6 @@ package the_fireplace.clans.commands.op;
 
 import com.google.common.collect.Lists;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -41,7 +40,7 @@ public class OpCommandDisband extends OpClanSubCommand {
 	}
 
 	@Override
-	protected void runFromAnywhere(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+	protected void runFromAnywhere(MinecraftServer server, ICommandSender sender, String[] args) {
 		String clan = args[0];
 		NewClan c = ClanCache.getClanByName(clan);
 		if(c != null) {
@@ -50,22 +49,25 @@ public class OpCommandDisband extends OpClanSubCommand {
 			sender.sendMessage(new TextComponentString("Clan not found.").setStyle(TextStyles.RED));
 	}
 
+	@SuppressWarnings("Duplicates")
 	public static void disbandClan(MinecraftServer server, ICommandSender sender, NewClan c) {
 		if(!c.isOpclan()) {
 			if (NewClanDatabase.removeClan(c.getClanId())) {
 				long distFunds = Clans.getPaymentHandler().getBalance(c.getClanId());
+				long rem;
 				distFunds += Clans.cfg.claimChunkCost * c.getClaimCount();
 				if (Clans.cfg.leaderRecieveDisbandFunds) {
-					c.payLeaders(distFunds);
-					distFunds = 0;
+					distFunds = c.payLeaders(distFunds);
+					rem = distFunds % c.getMemberCount();
+					distFunds /= c.getMemberCount();
 				} else {
-					c.payLeaders(distFunds % c.getMemberCount());
+					rem = c.payLeaders(distFunds % c.getMemberCount());
 					distFunds /= c.getMemberCount();
 				}
 				for (UUID member : c.getMembers().keySet()) {
 					Clans.getPaymentHandler().ensureAccountExists(member);
-					if (!Clans.getPaymentHandler().addAmount(distFunds, member))
-						c.payLeaders(distFunds);
+					if (!Clans.getPaymentHandler().addAmount(distFunds + (rem-- > 0 ? 1 : 0), member))
+						rem += c.payLeaders(distFunds);
 					EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(member);
 					//noinspection ConstantConditions
 					if (player != null) {

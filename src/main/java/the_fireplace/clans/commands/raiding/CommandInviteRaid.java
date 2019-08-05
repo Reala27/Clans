@@ -51,14 +51,14 @@ public class CommandInviteRaid extends RaidSubCommand {
 				assert server != null;
 				EntityPlayerMP targetPlayer = getPlayer(server, sender, args[0]);
 				HashMap<EntityPlayerMP, EnumRank> clanPlayers = raid.getTarget().getOnlineMembers();
-				if(clanPlayers.size() > raid.getMemberCount() - Clans.cfg.maxRaidersOffset) {
+				if(clanPlayers.size() > raid.getAttackerCount() - Clans.cfg.maxRaidersOffset) {
 					if(!clanPlayers.containsKey(targetPlayer)) {
 						targetPlayer.sendMessage(new TextComponentTranslation("You have been invited to a raiding party against %1$s! To join, type /raid join %1$s", raid.getTarget().getClanName()).setStyle(TextStyles.GREEN));
 						sender.sendMessage(new TextComponentTranslation("You successfully invited %s to the raiding party!", targetPlayer.getName()).setStyle(TextStyles.GREEN));
 					} else
 						sender.sendMessage(new TextComponentString("You cannot invite someone to raid a clan they are a part of!").setStyle(TextStyles.RED));
 				} else
-					sender.sendMessage(new TextComponentTranslation("Your raiding party cannot hold any more people! It has %s raiders and the limit is currently %s.", raid.getMemberCount(), clanPlayers.size() + Clans.cfg.maxRaidersOffset).setStyle(TextStyles.RED));
+					sender.sendMessage(new TextComponentTranslation("Your raiding party cannot hold any more people! It has %s raiders and the limit is currently %s.", raid.getAttackerCount(), clanPlayers.size() + Clans.cfg.maxRaidersOffset).setStyle(TextStyles.RED));
 			} else//Internal error because we should not reach this point
 				sender.sendMessage(new TextComponentString("Internal error: You are not in a raiding party!").setStyle(TextStyles.RED));
 		} else

@@ -1,12 +1,12 @@
 package the_fireplace.clans.compat.dynmap.data;
 
 public class ClanDimInfo {
-    private String clanName;
-    private String clanDescription;
+    private final String clanName;
+    private final String clanDescription;
 
-    private int clanColor;
-    private String clanUniqueID;
-    private int clanDimension;
+    private final int clanColor;
+    private final String clanUniqueID;
+    private final int clanDimension;
 
     public ClanDimInfo(String clanID, int dim, String clanName, String description, int rgbColor) {
         this.clanUniqueID = clanID;

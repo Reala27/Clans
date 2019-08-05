@@ -1,6 +1,7 @@
 package the_fireplace.clans.event;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.text.Style;
@@ -55,14 +56,13 @@ public class Timer {
 				ticks -= 20;
 
 				RaidingParties.decrementBuffers();
-				for(Map.Entry<EntityPlayerMP, Pair<Integer, Integer>> entry : clanHomeWarmups.entrySet())
+				for(Map.Entry<EntityPlayerMP, Pair<Integer, Integer>> entry : Sets.newHashSet(clanHomeWarmups.entrySet()))
 					if (entry.getValue().getValue1() == 1 && entry.getKey() != null && entry.getKey().isEntityAlive()) {
 						NewClan c = ClanCache.getPlayerClans(entry.getKey().getUniqueID()).get(entry.getValue().getValue2());
 						if(c != null && c.getHome() != null)
 							CommandHome.teleportHome(entry.getKey(), c, c.getHome(), entry.getKey().dimension);
 					}
-				Set<EntityPlayerMP> players = clanHomeWarmups.keySet();
-				for(EntityPlayerMP player: players)
+				for(EntityPlayerMP player: Sets.newHashSet(clanHomeWarmups.keySet()))
 					if(clanHomeWarmups.get(player).getValue1() > 0)
 						clanHomeWarmups.put(player, new Pair<>(clanHomeWarmups.get(player).getValue1() - 1, clanHomeWarmups.get(player).getValue2()));
 					else
@@ -75,7 +75,7 @@ public class Timer {
 				if (Clans.cfg.clanUpkeepDays > 0 || Clans.cfg.chargeRentDays > 0)
 					for (NewClan clan : NewClanDatabase.getClans()) {
 						if (Clans.cfg.chargeRentDays > 0 && System.currentTimeMillis() >= clan.getNextRentTimestamp()) {
-							Clans.LOGGER.debug("Charging rent for %s.", clan.getClanName());
+							Clans.LOGGER.debug("Charging rent for {}.", clan.getClanName());
 							for (Map.Entry<UUID, EnumRank> member : clan.getMembers().entrySet()) {
 								if (Clans.getPaymentHandler().deductAmount(clan.getRent(), member.getKey()))
 									Clans.getPaymentHandler().addAmount(clan.getRent(), clan.getClanId());
@@ -93,7 +93,7 @@ public class Timer {
 							clan.updateNextRentTimeStamp();
 						}
 						if (Clans.cfg.clanUpkeepDays > 0 && System.currentTimeMillis() >= clan.getNextUpkeepTimestamp()) {
-							Clans.LOGGER.debug("Charging upkeep for %s.", clan.getClanName());
+							Clans.LOGGER.debug("Charging upkeep for {}.", clan.getClanName());
 							int upkeep = Clans.cfg.clanUpkeepCost;
 							if (Clans.cfg.multiplyUpkeepMembers)
 								upkeep *= clan.getMemberCount();
@@ -101,18 +101,20 @@ public class Timer {
 								upkeep *= clan.getClaimCount();
 							if (Clans.getPaymentHandler().deductPartialAmount(upkeep, clan.getClanId()) > 0 && Clans.cfg.disbandNoUpkeep) {
 								long distFunds = Clans.getPaymentHandler().getBalance(clan.getClanId());
+								long rem;
 								distFunds += Clans.cfg.claimChunkCost * clan.getClaimCount();
 								if (Clans.cfg.leaderRecieveDisbandFunds) {
-									clan.payLeaders(distFunds);
-									distFunds = 0;
+									distFunds = clan.payLeaders(distFunds);
+									rem = distFunds % clan.getMemberCount();
+									distFunds /= clan.getMemberCount();
 								} else {
-									clan.payLeaders(distFunds % clan.getMemberCount());
+									rem = clan.payLeaders(distFunds % clan.getMemberCount());
 									distFunds /= clan.getMemberCount();
 								}
 								for (UUID member : clan.getMembers().keySet()) {
 									Clans.getPaymentHandler().ensureAccountExists(member);
-									if (!Clans.getPaymentHandler().addAmount(distFunds, member))
-										clan.payLeaders(distFunds);
+									if (!Clans.getPaymentHandler().addAmount(distFunds + (rem-- > 0 ? 1 : 0), member))
+										rem += clan.payLeaders(distFunds);
 									EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(member);
 									//noinspection ConstantConditions
 									if (player != null) {
@@ -209,18 +211,20 @@ public class Timer {
 					for(NewClan pc: playerClans)
 						if (RaidingParties.hasActiveRaid(pc)) {
 							Raid r = RaidingParties.getActiveRaid(pc);
-							if (pc.getClanId().equals(chunkClan))
-								r.resetDefenderAbandonmentTime(player);
-							else
-								r.incrementDefenderAbandonmentTime(player);
+							if(r.getDefenders().contains(player.getUniqueID()))
+								if (pc.getClanId().equals(chunkClan))
+									r.resetDefenderAbandonmentTime(player);
+								else
+									r.incrementDefenderAbandonmentTime(player);
 						}
 					if (RaidingParties.getRaidingPlayers().contains(player.getUniqueID())) {
 						Raid r = RaidingParties.getRaid(player);
 						if (r.isActive()) {
-							if (r.getTarget().getClanId().equals(chunkClan))
-								r.resetAttackerAbandonmentTime(player);
-							else
-								r.incrementAttackerAbandonmentTime(player);
+							if(r.getAttackers().contains(player.getUniqueID()))
+								if (r.getTarget().getClanId().equals(chunkClan))
+									r.resetAttackerAbandonmentTime(player);
+								else
+									r.incrementAttackerAbandonmentTime(player);
 						}
 					}
 

@@ -1,1 +1,2 @@
-Fix issues with counting and using online players
+Fixed crash if a raid ends while the raid data is being used in another place
+Code cleanup

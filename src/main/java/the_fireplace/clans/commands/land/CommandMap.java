@@ -13,7 +13,6 @@ import the_fireplace.clans.clan.ClanChunkCache;
 import the_fireplace.clans.clan.EnumRank;
 import the_fireplace.clans.clan.NewClan;
 import the_fireplace.clans.commands.ClanSubCommand;
-import the_fireplace.clans.util.ChunkUtils;
 import the_fireplace.clans.util.TextStyles;
 
 import javax.annotation.Nullable;

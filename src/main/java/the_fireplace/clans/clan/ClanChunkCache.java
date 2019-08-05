@@ -17,7 +17,7 @@ public class ClanChunkCache {
 
     private static boolean isLoaded = false;
     private static boolean isChanged = false;
-    private static HashMap<UUID, Set<ChunkPosition>> claimedChunks = Maps.newHashMap();
+    private static final HashMap<UUID, Set<ChunkPosition>> claimedChunks = Maps.newHashMap();
 
     public static Set<ChunkPosition> getChunks(UUID clan) {
         if(!isLoaded)
@@ -31,7 +31,7 @@ public class ClanChunkCache {
             load();
         Set<NewClan> claimClans = Sets.newHashSet();
 
-        Set<UUID> clanIds = claimedChunks.keySet();
+        Set<UUID> clanIds = Sets.newHashSet(claimedChunks.keySet());
 
         // do nothing if this is null
         if(clanIds == null) {
@@ -50,6 +50,7 @@ public class ClanChunkCache {
         return claimClans;
     }
 
+    @SuppressWarnings("Duplicates")
     public static void addChunk(NewClan clan, int x, int z, int dim) {
         if(!isLoaded)
             load();
@@ -127,7 +128,7 @@ public class ClanChunkCache {
             return;
         JsonObject obj = new JsonObject();
         JsonArray claimedChunkMap = new JsonArray();
-        for(Map.Entry<UUID, Set<ChunkPosition>> position : claimedChunks.entrySet()) {
+        for(Map.Entry<UUID, Set<ChunkPosition>> position : Sets.newHashSet(claimedChunks.entrySet())) {
             JsonArray positionArray = new JsonArray();
             for(ChunkPosition pos: position.getValue()) {
                 JsonObject chunkPositionObject = new JsonObject();

@@ -8,8 +8,8 @@ public class ChunkEdge {
     private static final int CHUNK_SIZE = 16;
 
     private Edge m_edgeType = Edge.LEFT;
-    private PositionPoint m_p1 = new PositionPoint();
-    private PositionPoint m_p2 = new PositionPoint();
+    private final PositionPoint m_p1 = new PositionPoint();
+    private final PositionPoint m_p2 = new PositionPoint();
 
     /**
      * Construct an edge based on the chunk and edge position provided.

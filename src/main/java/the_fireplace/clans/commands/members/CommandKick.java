@@ -47,7 +47,6 @@ public class CommandKick extends ClanSubCommand {
 		return "/clan kick <player>";
 	}
 
-	@SuppressWarnings("Duplicates")
 	@Override
 	public void run(MinecraftServer server, EntityPlayerMP sender, String[] args) throws CommandException {
 		GameProfile target = server.getPlayerProfileCache().getGameProfileForUsername(args[0]);
@@ -78,11 +77,12 @@ public class CommandKick extends ClanSubCommand {
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
 		ArrayList<String> playerNames = Lists.newArrayList();
-		for(UUID player: selectedClan.getMembers().keySet()) {
-			GameProfile playerProf = server.getPlayerProfileCache().getProfileByUUID(player);
-			if(playerProf != null && (selectedClan.getMembers().get(player).equals(EnumRank.MEMBER) || (sender instanceof EntityPlayerMP && selectedClan.getMembers().get(((EntityPlayerMP) sender).getUniqueID()).equals(EnumRank.LEADER))))
-				playerNames.add(playerProf.getName());
-		}
+		if(selectedClan != null)
+			for(UUID player: selectedClan.getMembers().keySet()) {
+				GameProfile playerProf = server.getPlayerProfileCache().getProfileByUUID(player);
+				if(playerProf != null && (selectedClan.getMembers().get(player).equals(EnumRank.MEMBER) || (sender instanceof EntityPlayerMP && selectedClan.getMembers().get(((EntityPlayerMP) sender).getUniqueID()).equals(EnumRank.LEADER))))
+					playerNames.add(playerProf.getName());
+			}
 		return args.length == 1 ? playerNames : Collections.emptyList();
 	}
 
