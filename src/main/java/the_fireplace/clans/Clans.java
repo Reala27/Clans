@@ -110,6 +110,78 @@ public final class Clans {
         dynmapCompat.init();
     }
 
+    protected boolean canBlockBeBroken(World world, BlockPos position, boolean placedBackDown) {
+        if (!world.isRemote)
+        {
+            Chunk c = world.getChunk(position);
+            UUID chunkOwner = ChunkUtils.getChunkOwner(c);
+            //If a chunk owner exists
+            if (chunkOwner != null)
+            {
+                // System.out.println("Check 2");
+                NewClan chunkClan = ClanCache.getClanById(chunkOwner);
+                //If the owner has a clan
+                if (chunkClan != null)
+                {
+                    // System.out.println("Chunk owned by " + chunkClan.getClanName());
+                    //bool to determine if a raid against the owner's clan is in effect
+                    boolean isRaided = RaidingParties.hasActiveRaid(chunkClan);
+
+                    // System.out.println(chunkClan.getClanName() + " is under attack: " + isRaided);
+                    if (isRaided)
+                    {
+                        IBlockState targetState = world.getBlockState(position);
+
+                        if (targetState.getBlock().hasTileEntity(targetState))
+                        {
+                            // We don't want to destroy a tile entity
+                            return false;
+                        }
+                        else
+                        {
+                            // System.out.println("DESTRUCTION!!!!");
+                            NewRaidRestoreDatabase.addRestoreBlock(c.getWorld().provider.getDimension(),
+                                                                   c, position, BlockSerializeUtil.blockToString(targetState),
+                                                                   chunkOwner);
+                        }
+                        return true;
+                    }
+                    else
+                    {
+                        //Cancel the event, disallowing the destruction.
+                        // System.err.println(chunkClan.getClanName() + " is not the target of a raid.");
+                        return false;
+                    }
+                }
+                return true;
+            }
+            else if(placedBackDown)
+            {
+                // When the block is placed back down, we want to
+                //   make sure that it will get removed once the raid
+                //   ends to prevent duplication of blocks
+                NewRaidRestoreDatabase.addRemoveBlock(c.getWorld().provider.getDimension(),
+                                                      c, position);
+            }
+            else
+            {
+                //Remove the uuid as the chunk owner since the uuid is not associated with a clan.
+                ChunkUtils.clearChunkOwner(c);
+
+                if(Clans.cfg.protectWilderness &&
+                   (Clans.cfg.minWildernessY < 0 ?
+                        position.getY() >= world.getSeaLevel() :
+                        position.getY() >= Clans.cfg.minWildernessY))
+                {
+                    // System.err.println("No clan owns this chunk. Destruction is disallowed.");
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     protected void loadIndustrialForegoingCompatibility() {
         Class<?> if_common_proxy = null;
         try
@@ -145,6 +217,132 @@ public final class Clans {
             System.err.println("Accessing the field " + custom_ds_field.getName() + " failed.");
             exc.printStackTrace();
         }
+    }
+
+    protected void loadTechGunsCompatibility() {
+        Class<?> tgeventhandler = null;
+        Class<?> tgblockexplodedevent = null;
+        Class<?> tgblockignitedevent = null;
+
+        try
+        {
+            tgeventhandler = Class.forName("techguns.events.TGEventHandler");
+            System.out.println("Successfully found " + tgeventhandler.getTypeName());
+
+            tgblockexplodedevent = Class.forName("techguns.events.BlockExplodedEvent");
+            System.out.println("Succesfully found " + tgblockexplodedevent.getTypeName());
+
+            tgblockignitedevent = Class.forName("techguns.events.BlockIgniteEvent");
+            System.out.println("Successfully found " + tgblockignitedevent.getTypeName());
+        }
+        catch (ClassNotFoundException exc)
+        {
+            System.err.println("Despite what Forge says, we could not load TechGuns: " + exc);
+            exc.printStackTrace();
+            return;
+        }
+
+        Method sp_temp;
+        Method begw_temp;
+        Method begp_temp;
+        Method bigw_temp;
+        Method bigp_temp;
+
+        try
+        {
+            sp_temp = tgeventhandler.getMethod("setPredicate", Predicate.class);
+            System.out.println("Successfully found " + sp_temp.getName());
+
+            begw_temp = tgblockexplodedevent.getMethod("getWorld");
+            System.out.println("Successfully found " + begw_temp.getName());
+
+            begp_temp = tgblockexplodedevent.getMethod("getPos");
+            System.out.println("Successfully found " + begp_temp.getName());
+
+            bigw_temp = tgblockignitedevent.getMethod("getWorld");
+            System.out.println("Successfully found " + bigw_temp.getName());
+
+            bigp_temp = tgblockignitedevent.getMethod("getPos");
+            System.out.println("Successfully found " + bigp_temp.getName());
+        }
+        catch(NoSuchMethodException exc)
+        {
+            exc.printStackTrace();
+            return;
+        }
+
+        final Method set_pred = sp_temp;
+        final Method be_get_world = begw_temp;
+        final Method be_get_pos = begp_temp;
+        final Method bi_get_world = bigw_temp;
+        final Method bi_get_pos = bigp_temp;
+        final Class<?> final_tgblockexplodedevent = tgblockexplodedevent;
+
+        Predicate<Object> techguns_callback = (Object event_obj) ->
+        {
+            BlockPos position = null;
+            World world = null;
+
+            try
+            {
+                if(final_tgblockexplodedevent.isInstance(event_obj)) {
+                    world = (World) be_get_world.invoke(event_obj);
+                    position = (BlockPos) be_get_pos.invoke(event_obj);
+                } else {
+                    world = (World) bi_get_world.invoke(event_obj);
+                    position = (BlockPos) bi_get_pos.invoke(event_obj);
+                }
+            }
+            catch (IllegalAccessException exc)
+            {
+                System.err.println("Method raised Illegal Access: " + exc);
+                exc.printStackTrace();
+                return true; // Allow ICBM to continue regardless, as this
+                             //  should never happen
+            }
+            catch (IllegalArgumentException exc)
+            {
+                System.err.println("Method raised Illegal Argument: " + exc);
+                exc.printStackTrace();
+                return true; // Allow ICBM to continue regardless, as this
+                             //  should never happen
+            }
+            catch (InvocationTargetException exc)
+            {
+                System.err.println("Called method raised exception: " + exc);
+                exc.printStackTrace();
+                return true; // Allow ICBM to continue regardless, as this
+                             //  should never happen
+            }
+
+            return canBlockBeBroken(world, position, false);
+        };
+
+        try
+        {
+            set_pred.invoke(null, (Object) (techguns_callback));
+            System.out.println("Successfully registered TechGuns callback.");
+        } catch (IllegalAccessException exc)
+        {
+            System.err.println("Method raised Illegal Access: " + exc);
+            exc.printStackTrace();
+            return; // Allow ICBM to continue regardless, as this
+            //  should never happen
+        } catch (IllegalArgumentException exc)
+        {
+            System.err.println("Method raised Illegal Argument: " + exc);
+            exc.printStackTrace();
+            return; // Allow ICBM to continue regardless, as this
+            //  should never happen
+        } catch (InvocationTargetException exc)
+        {
+            System.err.println("Called method raised exception: " + exc);
+            exc.printStackTrace();
+            return; // Allow ICBM to continue regardless, as this
+            //  should never happen
+        }
+
+        System.out.println("TechGuns Support fully setup.");
     }
 
     protected void loadICBMCompatibility() {
@@ -233,76 +431,7 @@ public final class Clans {
                              //  should never happen
             }
 
-            if (!world.isRemote)
-            {
-                Chunk c = world.getChunk(position);
-                UUID chunkOwner = ChunkUtils.getChunkOwner(c);
-                //If a chunk owner exists
-                if (chunkOwner != null)
-                {
-                    // System.out.println("Check 2");
-                    NewClan chunkClan = ClanCache.getClanById(chunkOwner);
-                    //If the owner has a clan
-                    if (chunkClan != null)
-                    {
-                        // System.out.println("Chunk owned by " + chunkClan.getClanName());
-                        //bool to determine if a raid against the owner's clan is in effect
-                        boolean isRaided = RaidingParties.hasActiveRaid(chunkClan);
-
-                        // System.out.println(chunkClan.getClanName() + " is under attack: " + isRaided);
-                        if (isRaided)
-                        {
-                            IBlockState targetState = world.getBlockState(position);
-
-                            if (targetState.getBlock().hasTileEntity(targetState))
-                            {
-                                // We don't want to destroy a tile entity
-                                return false;
-                            }
-                            else
-                            {
-                                // System.out.println("DESTRUCTION!!!!");
-                                NewRaidRestoreDatabase.addRestoreBlock(c.getWorld().provider.getDimension(),
-                                                                       c, position, BlockSerializeUtil.blockToString(targetState),
-                                                                       chunkOwner);
-                            }
-                            return true;
-                        }
-                        else
-                        {
-                            //Cancel the event, disallowing the destruction.
-                            // System.err.println(chunkClan.getClanName() + " is not the target of a raid.");
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-                else if(placedBackDown)
-                {
-                    // When the block is placed back down, we want to
-                    //   make sure that it will get removed once the raid
-                    //   ends to prevent duplication of blocks
-                    NewRaidRestoreDatabase.addRemoveBlock(c.getWorld().provider.getDimension(),
-                                                          c, position);
-                }
-                else
-                {
-                    //Remove the uuid as the chunk owner since the uuid is not associated with a clan.
-                    ChunkUtils.clearChunkOwner(c);
-
-                    if(Clans.cfg.protectWilderness &&
-                       (Clans.cfg.minWildernessY < 0 ?
-                            position.getY() >= world.getSeaLevel() :
-                            position.getY() >= Clans.cfg.minWildernessY))
-                    {
-                        // System.err.println("No clan owns this chunk. Destruction is disallowed.");
-                        return false;
-                    }
-                }
-            }
-
-
-            return true;
+            return canBlockBeBroken(world, position, placedBackDown);
         };
 
         try
@@ -345,6 +474,8 @@ public final class Clans {
         if(Loader.isModLoaded("icbmclassic"))
             loadICBMCompatibility();
 
+        if(Loader.isModLoaded("techguns"))
+            loadTechGunsCompatibility();
     }
     
 
